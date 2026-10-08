@@ -1,11 +1,11 @@
 openapi: 3.0.3
 info:
   title: LibFind API
-  version: 0.0.0
+  version: 0.1.0-m0
   description: |
-    Phase 0 OpenAPI skeleton for LibFind.
+    Phase 0 OpenAPI foundation for LibFind.
     Base path: /api/v1
-    Product endpoints are intentionally absent until Phase 1 authorization.
+    Product marketplace endpoints remain Phase 1+.
 servers:
   - url: /api/v1
     description: Versioned API
@@ -13,35 +13,113 @@ paths:
   /health:
     get:
       operationId: getHealth
-      summary: Liveness / readiness probe
-      tags:
-        - System
+      summary: Liveness probe
+      tags: [System]
       responses:
         '200':
           description: Service is healthy
-          headers:
-            X-Request-Id:
-              schema:
-                type: string
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
-        '500':
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
+  /ready:
+    get:
+      operationId: getReady
+      summary: Readiness probe (database required)
+      tags: [System]
+      responses:
+        '200':
+          description: Ready
+        '503':
+          description: Not ready
+  /metrics:
+    get:
+      operationId: getMetrics
+      summary: Prometheus metrics
+      tags: [System]
+      responses:
+        '200':
+          description: Prometheus text
+  /locations/counties:
+    get:
+      operationId: listCounties
+      summary: List Liberia counties (15)
+      tags: [Locations]
+      responses:
+        '200':
+          description: County list
+  /categories:
+    get:
+      operationId: listCategories
+      summary: Category registry foundation
+      tags: [Categories]
+      responses:
+        '200':
+          description: Categories
+  /auth/foundation:
+    get:
+      operationId: authFoundation
+      summary: Auth module foundation status
+      tags: [Auth]
+      responses:
+        '200':
+          description: Auth foundation ok
+  /auth/otp/request:
+    post:
+      operationId: requestOtp
+      summary: Create OTP challenge (M0 skeleton; SMS Phase 1)
+      tags: [Auth]
+      responses:
+        '201':
+          description: Challenge created
+        '429':
+          description: Rate limited
+  /auth/otp/verify:
+    post:
+      operationId: verifyOtp
+      summary: Verify OTP and issue session tokens
+      tags: [Auth]
+      responses:
+        '200':
+          description: Tokens issued
+  /media/foundation:
+    get:
+      operationId: mediaFoundation
+      summary: Media module foundation status
+      tags: [Media]
+      responses:
+        '200':
+          description: Media foundation ok
+  /media/sign-upload:
+    post:
+      operationId: signUpload
+      summary: Signed Cloudinary upload params (server-side secret)
+      tags: [Media]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Signature payload without api_secret
+        '503':
+          description: Cloudinary not configured
+  /spike/ssr-search:
+    get:
+      operationId: ssrSearchSpike
+      summary: M0 SSR/search HTML spike (not product search)
+      tags: [Spike]
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: HTML document
 components:
   schemas:
     HealthResponse:
       type: object
-      required:
-        - status
-        - service
-        - timestamp
-        - requestId
+      required: [status, service, timestamp, requestId]
       properties:
         status:
           type: string
@@ -56,10 +134,7 @@ components:
           type: string
     ApiErrorBody:
       type: object
-      required:
-        - code
-        - message
-        - requestId
+      required: [code, message, requestId]
       properties:
         code:
           type: string
@@ -79,8 +154,7 @@ components:
           type: string
     ApiErrorResponse:
       type: object
-      required:
-        - error
+      required: [error]
       properties:
         error:
           $ref: '#/components/schemas/ApiErrorBody'
@@ -89,4 +163,4 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Short-lived access token (Phase 1 auth). Not active in M0 skeleton.
+      description: Short-lived access token from OTP verify / refresh.

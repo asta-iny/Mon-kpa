@@ -87,11 +87,28 @@ jobs:
       - name: Prisma migrate (CI validation)
         run: npx prisma migrate deploy --schema=prisma/schema.prisma
 
+      - name: Database seed (synthetic)
+        run: npm run db:seed
+
+      - name: Search spike (FULLTEXT timing)
+        run: npm run spike:search
+
       - name: Build packages + API + web
         run: npm run build
 
       - name: Dependency vulnerability scan
         run: npm audit --audit-level=high
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Playwright smoke
+        run: npm run test:e2e
+        env:
+          APP_ENV: test
+          NODE_ENV: test
+          DATABASE_URL: mysql://libfind:libfind@127.0.0.1:3306/libfind
+          REDIS_URL: redis://127.0.0.1:6379
 
       - name: Docker build (API)
         run: docker build -f docker/api.Dockerfile -t libfind-api:ci .

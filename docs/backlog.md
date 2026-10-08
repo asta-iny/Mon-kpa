@@ -9,28 +9,28 @@ Work in dependency order. Each task is bounded and must satisfy Definition of Re
 **Depends on:** none  
 **Output:** repo, CI, Docker, conventions.
 
-- M0-001 Repository structure and package/workspace conventions
-- M0-002 TypeScript strict configuration
-- M0-003 Lint/format/commit hooks
-- M0-004 CI quality/security/build pipeline
-- M0-005 Docker/local development environment
-- M0-006 Environment/secrets configuration contract
-- M0-007 Baseline logging/request ID/error handling
-- M0-008 Observability foundation
-- M0-009 ADR baseline and architecture docs
-- M0-010 SSR/search performance spike
+- [x] M0-001 Repository structure and package/workspace conventions
+- [x] M0-002 TypeScript strict configuration
+- [x] M0-003 Lint/format/commit hooks
+- [x] M0-004 CI quality/security/build pipeline
+- [x] M0-005 Docker/local development environment
+- [x] M0-006 Environment/secrets configuration contract
+- [x] M0-007 Baseline logging/request ID/error handling
+- [x] M0-008 Observability foundation
+- [x] M0-009 ADR baseline and architecture docs
+- [x] M0-010 SSR/search performance spike
 
 ### EPIC-01 — Database
 
 **Depends on:** EPIC-00  
 **Output:** MySQL schema, migrations, seeds, indexes, tests.
 
-- M0-011 Prisma/MySQL baseline
-- M0-012 migration workflow and CI validation
-- M0-013 core identity/role/permission/session/OTP tables
-- M0-014 location tables and 15-county seed foundation
-- M0-015 audit schema foundation
-- M0-016 database test fixtures and seed safety
+- [x] M0-011 Prisma/MySQL baseline
+- [x] M0-012 migration workflow and CI validation
+- [x] M0-013 core identity/role/permission/session/OTP tables
+- [x] M0-014 location tables and 15-county seed foundation _(districts/communities OPEN)_
+- [x] M0-015 audit schema foundation
+- [x] M0-016 database test fixtures and seed safety
 
 ### EPIC-02 — Auth/RBAC
 
@@ -39,11 +39,11 @@ Work in dependency order. Each task is bounded and must satisfy Definition of Re
 
 M0 is limited to the architectural/foundation portion. Full product authentication behavior is Phase 1.
 
-- M0-017 auth module skeleton
-- M0-018 authorization middleware skeleton
-- M0-019 object-authorization policy interfaces
-- M0-020 audit integration
-- M0-021 rate-limit/abuse-control foundation
+- [x] M0-017 auth module skeleton
+- [x] M0-018 authorization middleware skeleton
+- [x] M0-019 object-authorization policy interfaces
+- [x] M0-020 audit integration
+- [x] M0-021 rate-limit/abuse-control foundation
 
 ### EPIC-03 — Locations/Categories
 
@@ -52,9 +52,9 @@ M0 is limited to the architectural/foundation portion. Full product authenticati
 
 M0:
 
-- M0-022 gazetteer import/seed mechanism
-- M0-023 location hierarchy validation
-- M0-024 category registry schema/foundation
+- [x] M0-022 gazetteer import/seed mechanism
+- [x] M0-023 location hierarchy validation
+- [x] M0-024 category registry schema/foundation
 
 Phase 1:
 
@@ -68,11 +68,11 @@ Phase 1:
 
 M0:
 
-- M0-025 Cloudinary provider adapter
-- M0-026 signed-upload spike
-- M0-027 media metadata validation
-- M0-028 failure/retry contract
-- M0-029 cleanup contract
+- [x] M0-025 Cloudinary provider adapter
+- [x] M0-026 signed-upload spike
+- [x] M0-027 media metadata validation
+- [x] M0-028 failure/retry contract
+- [x] M0-029 cleanup contract
 
 ### EPIC-05 — Listings
 

@@ -1,0 +1,28 @@
+[
+  {
+    "code": "goods",
+    "name": "Goods",
+    "isSynthetic": true,
+    "sortOrder": 1,
+    "children": [
+      { "code": "goods.electronics", "name": "Electronics", "isSynthetic": true, "sortOrder": 1 },
+      { "code": "goods.furniture", "name": "Furniture", "isSynthetic": true, "sortOrder": 2 }
+    ]
+  },
+  {
+    "code": "services",
+    "name": "Services",
+    "isSynthetic": true,
+    "sortOrder": 2,
+    "children": [
+      { "code": "services.repairs", "name": "Repairs", "isSynthetic": true, "sortOrder": 1 }
+    ]
+  },
+  {
+    "code": "property",
+    "name": "Property",
+    "isSynthetic": true,
+    "sortOrder": 3,
+    "children": []
+  }
+]

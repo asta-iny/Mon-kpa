@@ -1,0 +1,17 @@
+[
+  { "code": "BOMI", "name": "Bomi" },
+  { "code": "BONG", "name": "Bong" },
+  { "code": "GBARPOLU", "name": "Gbarpolu" },
+  { "code": "GRAND_BASSA", "name": "Grand Bassa" },
+  { "code": "GRAND_CAPE_MOUNT", "name": "Grand Cape Mount" },
+  { "code": "GRAND_GEDEH", "name": "Grand Gedeh" },
+  { "code": "GRAND_KRU", "name": "Grand Kru" },
+  { "code": "LOFA", "name": "Lofa" },
+  { "code": "MARGIBI", "name": "Margibi" },
+  { "code": "MARYLAND", "name": "Maryland" },
+  { "code": "MONTSERRADO", "name": "Montserrado" },
+  { "code": "NIMBA", "name": "Nimba" },
+  { "code": "RIVERCESS", "name": "Rivercess" },
+  { "code": "RIVER_GEE", "name": "River Gee" },
+  { "code": "SINOE", "name": "Sinoe" }
+]

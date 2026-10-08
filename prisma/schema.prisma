@@ -1,5 +1,5 @@
-// LibFind Phase 0 — Prisma / MySQL baseline
-// Product domain models (listings, messaging, payments, etc.) are out of M0-001 scope.
+// LibFind Phase 0 — Prisma / MySQL foundation
+// Product domain models (listings, messaging, payments, etc.) remain Phase 1+.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,11 +11,232 @@ datasource db {
 }
 
 /// Foundation marker table proving migrations + InnoDB baseline.
-/// Domain tables land in later M0 backlog items (identity, locations, audit).
 model SchemaBootstrap {
   id        String   @id @db.Char(36)
   label     String   @db.VarChar(64)
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
   @@map("schema_bootstrap")
+}
+
+// --- Identity / RBAC / OTP / Session (M0-013) ---
+
+model User {
+  id           String    @id @db.Char(36)
+  phoneE164    String    @unique @map("phone_e164") @db.VarChar(20)
+  displayName  String?   @map("display_name") @db.VarChar(120)
+  status       String    @default("active") @db.VarChar(32)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt    DateTime? @map("deleted_at") @db.DateTime(3)
+
+  roles         UserRole[]
+  sessions      Session[]
+  otpChallenges OtpChallenge[]
+  mediaAssets   MediaAsset[]
+  auditEvents   AuditEvent[] @relation("AuditActor")
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @db.Char(36)
+  code        String   @unique @db.VarChar(64)
+  name        String   @db.VarChar(120)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @db.Char(36)
+  code        String   @unique @db.VarChar(96)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  roles RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id") @db.Char(36)
+  permissionId String @map("permission_id") @db.Char(36)
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId     String   @map("user_id") @db.Char(36)
+  roleId     String   @map("role_id") @db.Char(36)
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+/// OTP challenges store only a secure hash of the code (never plaintext).
+model OtpChallenge {
+  id              String    @id @db.Char(36)
+  userId          String?   @map("user_id") @db.Char(36)
+  phoneE164       String    @map("phone_e164") @db.VarChar(20)
+  codeHash        String    @map("code_hash") @db.VarChar(255)
+  expiresAt       DateTime  @map("expires_at") @db.DateTime(3)
+  consumedAt      DateTime? @map("consumed_at") @db.DateTime(3)
+  attemptCount    Int       @default(0) @map("attempt_count")
+  maxAttempts     Int       @default(5) @map("max_attempts")
+  requestIpHash   String?   @map("request_ip_hash") @db.VarChar(128)
+  requestDeviceId String?   @map("request_device_id") @db.VarChar(128)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([phoneE164, createdAt])
+  @@map("otp_challenges")
+}
+
+/// Refresh-token sessions: reuse of a rotated token revokes the session family.
+model Session {
+  id               String    @id @db.Char(36)
+  userId           String    @map("user_id") @db.Char(36)
+  familyId         String    @map("family_id") @db.Char(36)
+  refreshTokenHash String    @map("refresh_token_hash") @db.VarChar(255)
+  expiresAt        DateTime  @map("expires_at") @db.DateTime(3)
+  revokedAt        DateTime? @map("revoked_at") @db.DateTime(3)
+  replacedById     String?   @map("replaced_by_id") @db.Char(36)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  lastUsedAt       DateTime? @map("last_used_at") @db.DateTime(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("sessions")
+}
+
+// --- Locations (M0-014) — county → district → community hierarchy ---
+
+model County {
+  id        String   @id @db.Char(36)
+  code      String   @unique @db.VarChar(32)
+  name      String   @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  districts District[]
+
+  @@map("counties")
+}
+
+model District {
+  id        String   @id @db.Char(36)
+  countyId  String   @map("county_id") @db.Char(36)
+  code      String   @db.VarChar(64)
+  name      String   @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  county      County      @relation(fields: [countyId], references: [id], onDelete: Restrict)
+  communities Community[]
+
+  @@unique([countyId, code])
+  @@map("districts")
+}
+
+model Community {
+  id         String   @id @db.Char(36)
+  districtId String   @map("district_id") @db.Char(36)
+  code       String   @db.VarChar(64)
+  name       String   @db.VarChar(120)
+  createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  district District @relation(fields: [districtId], references: [id], onDelete: Restrict)
+
+  @@unique([districtId, code])
+  @@map("communities")
+}
+
+// --- Categories (M0-024) ---
+
+model Category {
+  id          String   @id @db.Char(36)
+  code        String   @unique @db.VarChar(64)
+  name        String   @db.VarChar(120)
+  parentId    String?  @map("parent_id") @db.Char(36)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isSynthetic Boolean  @default(false) @map("is_synthetic")
+  createdAt   DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("CategoryTree")
+
+  @@map("categories")
+}
+
+// --- Audit (M0-015, ADR-012) — append-only hash-chained ---
+
+model AuditEvent {
+  id           String   @id @db.Char(36)
+  seq          BigInt   @default(autoincrement())
+  actorId      String?  @map("actor_id") @db.Char(36)
+  action       String   @db.VarChar(96)
+  resourceType String   @map("resource_type") @db.VarChar(64)
+  resourceId   String?  @map("resource_id") @db.Char(36)
+  payloadJson  Json?    @map("payload_json")
+  prevHash     String   @map("prev_hash") @db.Char(64)
+  hash         String   @db.Char(64)
+  requestId    String?  @map("request_id") @db.VarChar(64)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  actor User? @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([seq])
+  @@index([createdAt])
+  @@map("audit_events")
+}
+
+// --- Media metadata (M0-025+) — binaries live in Cloudinary ---
+
+model MediaAsset {
+  id               String    @id @db.Char(36)
+  ownerId          String    @map("owner_id") @db.Char(36)
+  cloudinaryPublicId String  @map("cloudinary_public_id") @db.VarChar(255)
+  resourceType     String    @default("image") @map("resource_type") @db.VarChar(32)
+  format           String?   @db.VarChar(32)
+  bytes            Int?
+  width            Int?
+  height           Int?
+  secureUrl        String?   @map("secure_url") @db.VarChar(512)
+  status           String    @default("active") @db.VarChar(32)
+  deletedAt        DateTime? @map("deleted_at") @db.DateTime(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
+  @@unique([cloudinaryPublicId])
+  @@map("media_assets")
+}
+
+// --- M0 search spike only (not product listings) ---
+
+model SearchSpikeDocument {
+  id        String   @id @db.Char(36)
+  title     String   @db.VarChar(200)
+  body      String   @db.Text
+  countyCode String? @map("county_code") @db.VarChar(32)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@index([countyCode])
+  @@map("search_spike_documents")
 }
