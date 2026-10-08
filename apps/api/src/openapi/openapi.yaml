@@ -1,0 +1,92 @@
+openapi: 3.0.3
+info:
+  title: LibFind API
+  version: 0.0.0
+  description: |
+    Phase 0 OpenAPI skeleton for LibFind.
+    Base path: /api/v1
+    Product endpoints are intentionally absent until Phase 1 authorization.
+servers:
+  - url: /api/v1
+    description: Versioned API
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness / readiness probe
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          headers:
+            X-Request-Id:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - timestamp
+        - requestId
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+          enum: [libfind-api]
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+    ApiErrorBody:
+      type: object
+      required:
+        - code
+        - message
+        - requestId
+      properties:
+        code:
+          type: string
+          enum:
+            - BAD_REQUEST
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - NOT_FOUND
+            - CONFLICT
+            - RATE_LIMITED
+            - VALIDATION_ERROR
+            - INTERNAL_ERROR
+        message:
+          type: string
+        details: {}
+        requestId:
+          type: string
+    ApiErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          $ref: '#/components/schemas/ApiErrorBody'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Short-lived access token (Phase 1 auth). Not active in M0 skeleton.

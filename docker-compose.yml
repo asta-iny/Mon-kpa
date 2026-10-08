@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: libfind-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: libfind_root
+      MYSQL_DATABASE: libfind
+      MYSQL_USER: libfind
+      MYSQL_PASSWORD: libfind
+    ports:
+      - '3306:3306'
+    volumes:
+      - libfind_mysql_data:/var/lib/mysql
+    command:
+      - --default-authentication-plugin=caching_sha2_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', '127.0.0.1', '-ulibfind', '-plibfind']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: libfind-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - libfind_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: libfind-api
+    restart: unless-stopped
+    env_file:
+      - .env.example
+    environment:
+      NODE_ENV: local
+      APP_ENV: local
+      PORT: 3001
+      DATABASE_URL: mysql://libfind:libfind@mysql:3306/libfind
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - '3001:3001'
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  libfind_mysql_data:
+  libfind_redis_data:

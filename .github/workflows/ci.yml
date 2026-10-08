@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Quality gates
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: libfind_root
+          MYSQL_DATABASE: libfind
+          MYSQL_USER: libfind
+          MYSQL_PASSWORD: libfind
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ulibfind -plibfind"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    env:
+      NODE_ENV: test
+      APP_ENV: test
+      DATABASE_URL: mysql://libfind:libfind@127.0.0.1:3306/libfind
+      REDIS_URL: redis://127.0.0.1:6379
+      CORS_ORIGIN: http://localhost:5173
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Secret / static scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Prisma validate
+        run: npm run prisma:validate
+
+      - name: Prisma generate
+        run: npm run prisma:generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit / integration tests
+        run: npm test
+
+      - name: OpenAPI validation
+        run: npm run openapi:validate
+
+      - name: Prisma migrate (CI validation)
+        run: npx prisma migrate deploy --schema=prisma/schema.prisma
+
+      - name: Build packages + API + web
+        run: npm run build
+
+      - name: Dependency vulnerability scan
+        run: npm audit --audit-level=high
+
+      - name: Docker build (API)
+        run: docker build -f docker/api.Dockerfile -t libfind-api:ci .
+
+      - name: Docker build (web)
+        run: docker build -f docker/web.Dockerfile -t libfind-web:ci .

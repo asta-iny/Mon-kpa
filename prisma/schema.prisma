@@ -1,0 +1,21 @@
+// LibFind Phase 0 — Prisma / MySQL baseline
+// Product domain models (listings, messaging, payments, etc.) are out of M0-001 scope.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+/// Foundation marker table proving migrations + InnoDB baseline.
+/// Domain tables land in later M0 backlog items (identity, locations, audit).
+model SchemaBootstrap {
+  id        String   @id @db.Char(36)
+  label     String   @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
+
+  @@map("schema_bootstrap")
+}

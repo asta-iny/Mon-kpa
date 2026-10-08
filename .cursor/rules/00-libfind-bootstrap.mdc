@@ -1,0 +1,22 @@
+---
+description: LibFind repository-wide engineering guardrails
+alwaysApply: true
+---
+
+# LibFind Cursor Guardrails
+
+1. Read `/AGENTS.md` before making any change.
+2. `/AGENTS.md` is the repository-wide agent contract.
+3. Current implementation gate is M0 / Phase 0 unless the owner explicitly authorizes a later phase.
+4. Do not implement Phase 1+ product features during M0.
+5. Do not redesign or replace the locked stack.
+6. MySQL 8.x + Prisma is mandatory; do not follow the older PostgreSQL diagram in v2.0.
+7. Do not introduce microservices, MongoDB, PostgreSQL, Elasticsearch/OpenSearch, Kafka, Kubernetes, GraphQL, or another infrastructure component without an approved ADR and measurable requirement.
+8. Do not silently decide items marked OPEN in the specifications.
+9. Every task must have a requirement/Task ID, dependencies, acceptance criteria, tests, and a bounded scope.
+10. No unrelated refactors.
+11. No “while I’m here” cleanup.
+12. No deleting or weakening tests to make a task pass.
+13. No secrets or real user data in local fixtures.
+14. Do not claim completion until checks have been run and results reported.
+15. At the end of a task, stop. Do not automatically select the next backlog item.
