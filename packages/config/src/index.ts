@@ -25,9 +25,7 @@ export const serverEnvSchema = z.object({
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
-export function loadServerEnv(
-  source: NodeJS.ProcessEnv = process.env,
-): ServerEnv {
+export function loadServerEnv(source: NodeJS.ProcessEnv = process.env): ServerEnv {
   const parsed = serverEnvSchema.safeParse(source);
   if (!parsed.success) {
     const details = parsed.error.issues

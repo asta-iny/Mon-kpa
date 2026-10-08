@@ -20,6 +20,12 @@
    docker compose up -d mysql redis
    ```
 
+   Default host ports are **3316** (MySQL) and **6380** (Redis) to avoid colliding with
+   other local services. Containers still use 3306/6379 internally.
+
+   If you already run MySQL/Redis on the host, set `DATABASE_URL` / `REDIS_URL` in
+   local `.env` only (never commit real passwords).
+
 3. Install dependencies:
 
    ```bash

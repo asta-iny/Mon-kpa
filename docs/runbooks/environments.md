@@ -1,10 +1,10 @@
 # Environments and secrets
 
-| Environment | Purpose | Data | Secrets source |
-|---|---|---|---|
-| local | development / agent execution | synthetic only | local `.env` (gitignored) |
-| staging | QA / UAT | synthetic or explicitly approved test data | hosting secret store |
-| production | live | real data | hosting secret store |
+| Environment | Purpose                       | Data                                       | Secrets source            |
+| ----------- | ----------------------------- | ------------------------------------------ | ------------------------- |
+| local       | development / agent execution | synthetic only                             | local `.env` (gitignored) |
+| staging     | QA / UAT                      | synthetic or explicitly approved test data | hosting secret store      |
+| production  | live                          | real data                                  | hosting secret store      |
 
 ## Rules
 

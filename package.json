@@ -2,6 +2,7 @@
   "name": "libfind",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "description": "LibFind modular monolith — Phase 0 foundations",
   "workspaces": [
     "apps/*",
@@ -44,7 +45,7 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.44.1",
-    "vitest": "^3.2.4"
+    "vitest": "^5.0.3"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2"
@@ -61,5 +62,9 @@
   "prisma": {
     "schema": "prisma/schema.prisma",
     "seed": "tsx prisma/seed/index.ts"
+  },
+  "overrides": {
+    "tinypool": "^2.2.0",
+    "deepmerge-ts": "^8.0.2"
   }
 }

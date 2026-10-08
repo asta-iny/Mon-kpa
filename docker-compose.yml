@@ -9,7 +9,8 @@ services:
       MYSQL_USER: libfind
       MYSQL_PASSWORD: libfind
     ports:
-      - '3306:3306'
+      # Host 3316 avoids clashing with local MySQL (3306) and other allocations.
+      - '3316:3306'
     volumes:
       - libfind_mysql_data:/var/lib/mysql
     command:
@@ -27,7 +28,8 @@ services:
     container_name: libfind-redis
     restart: unless-stopped
     ports:
-      - '6379:6379'
+      # Host 6380 avoids clashing with a local Redis already bound to 6379.
+      - '6380:6379'
     volumes:
       - libfind_redis_data:/data
     healthcheck:

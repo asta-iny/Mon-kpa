@@ -144,11 +144,11 @@ Socket.IO + Redis adapter is a Phase 2 concern.
 
 ## 10. Environments
 
-| Environment | Purpose | Data |
-|---|---|---|
-| local | development/agent execution | synthetic only |
-| staging | QA/UAT | synthetic or explicitly approved test data |
-| production | live | real data, privileged controls |
+| Environment | Purpose                     | Data                                       |
+| ----------- | --------------------------- | ------------------------------------------ |
+| local       | development/agent execution | synthetic only                             |
+| staging     | QA/UAT                      | synthetic or explicitly approved test data |
+| production  | live                        | real data, privileged controls             |
 
 Secrets must never enter source control, frontend bundles, logs or fixtures.
 

@@ -47,15 +47,15 @@ See `docs/runbooks/local-setup.md` for details.
 
 ## Scripts
 
-| Script | Purpose |
-|---|---|
-| `npm run lint` | ESLint |
-| `npm run format:check` | Prettier |
-| `npm run typecheck` | Strict TypeScript |
-| `npm test` | Vitest unit/integration |
-| `npm run openapi:validate` | OpenAPI skeleton check |
-| `npm run build` | Build packages + API + web |
-| `npm run prisma:validate` | Prisma schema validation |
+| Script                     | Purpose                    |
+| -------------------------- | -------------------------- |
+| `npm run lint`             | ESLint                     |
+| `npm run format:check`     | Prettier                   |
+| `npm run typecheck`        | Strict TypeScript          |
+| `npm test`                 | Vitest unit/integration    |
+| `npm run openapi:validate` | OpenAPI skeleton check     |
+| `npm run build`            | Build packages + API + web |
+| `npm run prisma:validate`  | Prisma schema validation   |
 
 ## Agent / contribution rules
 

@@ -2,7 +2,7 @@
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY apps/api/package.json apps/api/
 COPY apps/web/package.json apps/web/
 COPY packages/shared-types/package.json packages/shared-types/
@@ -12,7 +12,7 @@ COPY tsconfig.base.json tsconfig.json ./
 COPY packages/shared-types packages/shared-types
 COPY apps/web apps/web
 
-RUN npm install \
+RUN npm ci \
   && npm run build -w @libfind/shared-types \
   && npm run build -w @libfind/web
 

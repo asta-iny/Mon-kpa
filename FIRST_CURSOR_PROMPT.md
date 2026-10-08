@@ -1,6 +1,7 @@
 You are the implementation agent for the LibFind repository.
 
 Before changing anything, read and obey:
+
 1. `AGENTS.md`
 2. `README.md`
 3. `docs/architecture.md`
@@ -14,6 +15,7 @@ You are operating under the LibFind Engineering Implementation Specification v1.
 ## CRITICAL ARCHITECTURE RULE
 
 The engineering specification v1.0 explicitly locks:
+
 - React + TypeScript + Tailwind CSS
 - React Router
 - TanStack Query
@@ -89,6 +91,7 @@ If the repository is missing the foundation, implement only the bounded M0 found
 - ADR/documentation structure
 
 Do not implement:
+
 - listing creation/editing
 - public search
 - favorites
@@ -116,6 +119,7 @@ If the repository already has implementation:
 ### Step 5 — Security
 
 Verify that:
+
 - no secrets are committed
 - `.env.example` contains names only
 - secrets cannot reach frontend bundles
@@ -164,6 +168,7 @@ Do not claim owner acceptance yourself.
 ## HARD STOP RULES
 
 Stop and ask for clarification instead of guessing if:
+
 - an instruction conflicts with `AGENTS.md`
 - an OPEN decision is required
 - a requested change would alter a locked architecture decision
