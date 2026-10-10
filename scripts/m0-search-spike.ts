@@ -35,8 +35,9 @@ async function main(): Promise<void> {
   };
 
   console.log(
-    JSON.stringify(report, (_key, value) =>
-      typeof value === 'bigint' ? value.toString() : value,
+    JSON.stringify(
+      report,
+      (_key, value) => (typeof value === 'bigint' ? value.toString() : value),
       2,
     ),
   );

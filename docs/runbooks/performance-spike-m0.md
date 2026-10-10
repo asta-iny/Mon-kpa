@@ -28,9 +28,18 @@ curl "http://localhost:3001/api/v1/spike/ssr-search?q=mechanic"
 
 ## Results log
 
-| Date       | Environment               | Docs     | Query    | Elapsed ms       | Budget ms | Within budget | Notes                            |
-| ---------- | ------------------------- | -------- | -------- | ---------------- | --------- | ------------- | -------------------------------- |
-| 2026-10-08 | local (pending first run) | seed 150 | mechanic | _fill after run_ | 200       | _fill_        | Record EXPLAIN + timing from CLI |
+| Date       | Environment                                  | Docs     | Query    | Elapsed ms                     | Budget ms | Within budget | Notes                                                                        |
+| ---------- | -------------------------------------------- | -------- | -------- | ------------------------------ | --------- | ------------- | ---------------------------------------------------------------------------- |
+| 2026-10-10 | local — Docker MySQL 8.4 (compose host 3316) | seed 150 | mechanic | 8–13 warm / 126 first/cold run | 200       | yes           | EXPLAIN uses FULLTEXT index `search_spike_documents_title_body_ft`; 20 hits. |
+
+Reproduce on a clean database:
+
+```bash
+docker compose up -d mysql redis
+npm run prisma:migrate      # prisma migrate deploy
+npm run db:seed
+npm run spike:search
+```
 
 If `withinBudget` is false, treat as **M0 gate blocker** — do not mark checklist J as passed.
 
