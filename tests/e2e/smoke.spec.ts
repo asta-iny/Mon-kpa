@@ -1,5 +1,8 @@
 import { expect, test } from '@playwright/test';
 
+const apiBaseUrl =
+  process.env.API_BASE_URL ?? `http://127.0.0.1:${process.env.API_PORT ?? '3001'}/api/v1`;
+
 test('foundation home page loads', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto('/');
@@ -8,7 +11,7 @@ test('foundation home page loads', async ({ page }) => {
 });
 
 test('API health returns ok', async ({ request }) => {
-  const res = await request.get('http://127.0.0.1:3001/api/v1/health');
+  const res = await request.get(`${apiBaseUrl}/health`);
   expect(res.status()).toBe(200);
   const body = await res.json();
   expect(body.status).toBe('ok');
