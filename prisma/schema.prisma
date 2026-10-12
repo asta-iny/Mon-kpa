@@ -30,11 +30,19 @@ model User {
   updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
   deletedAt    DateTime? @map("deleted_at") @db.DateTime(3)
 
-  roles         UserRole[]
-  sessions      Session[]
-  otpChallenges OtpChallenge[]
-  mediaAssets   MediaAsset[]
-  auditEvents   AuditEvent[] @relation("AuditActor")
+  roles              UserRole[]
+  sessions           Session[]
+  otpChallenges      OtpChallenge[]
+  mediaAssets        MediaAsset[]
+  auditEvents        AuditEvent[] @relation("AuditActor")
+  listings           Listing[]
+  verifications      Verification[] @relation("VerificationReviewer")
+  reports            Report[]       @relation("ReportReporter")
+  moderatedReports   Report[]       @relation("ReportModerator")
+  moderationActions  ModerationAction[]
+
+  messagesSent       Message[]      @relation("MessageSender")
+  messagesReceived   Message[]      @relation("MessageRecipient")
 
   @@map("users")
 }
@@ -134,6 +142,7 @@ model County {
   createdAt DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
   districts District[]
+  listings  Listing[]
 
   @@map("counties")
 }
@@ -147,6 +156,7 @@ model District {
 
   county      County      @relation(fields: [countyId], references: [id], onDelete: Restrict)
   communities Community[]
+  listings    Listing[]
 
   @@unique([countyId, code])
   @@map("districts")
@@ -160,6 +170,7 @@ model Community {
   createdAt  DateTime @default(now()) @map("created_at") @db.DateTime(3)
 
   district District @relation(fields: [districtId], references: [id], onDelete: Restrict)
+  listings Listing[]
 
   @@unique([districtId, code])
   @@map("communities")
@@ -178,8 +189,137 @@ model Category {
 
   parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
   children Category[] @relation("CategoryTree")
+  listings Listing[]
 
   @@map("categories")
+}
+
+// --- Listings (Phase 1: EPIC-05) ---
+// Lifecycle: draft → active → paused/sold/archived/expired
+
+model Listing {
+  id            String    @id @db.Char(36)
+  ownerId       String    @map("owner_id") @db.Char(36)
+  categoryId    String    @map("category_id") @db.Char(36)
+  countyId      String    @map("county_id") @db.Char(36)
+  districtId    String?   @map("district_id") @db.Char(36)
+  communityId   String?   @map("community_id") @db.Char(36)
+  title         String    @db.VarChar(200)
+  description   String    @db.Text
+  priceAmount   String    @map("price_amount") @db.VarChar(32)
+  priceCurrency String    @map("price_currency") @db.VarChar(3)
+  status        String    @default("draft") @db.VarChar(32)
+  availableFrom DateTime? @map("available_from") @db.DateTime(3)
+  availableUntil DateTime? @map("available_until") @db.DateTime(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt     DateTime? @map("deleted_at") @db.DateTime(3)
+
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category  Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  county    County   @relation(fields: [countyId], references: [id], onDelete: Restrict)
+  district  District? @relation(fields: [districtId], references: [id], onDelete: Restrict)
+  community Community? @relation(fields: [communityId], references: [id], onDelete: Restrict)
+  media     MediaAsset[]
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([countyId, districtId, communityId])
+  @@index([status, createdAt])
+  @@index([availableFrom, availableUntil])
+  @@map("listings")
+}
+
+// --- Verification (Phase 1: EPIC-07) ---
+
+model Verification {
+  id           String    @id @db.Char(36)
+  subjectType  String    @map("subject_type") @db.VarChar(32)
+  subjectId    String    @map("subject_id") @db.Char(36)
+  type         String    @db.VarChar(32)
+  status       String    @default("pending") @db.VarChar(32)
+  evidenceJson Json?     @map("evidence_json")
+  reviewerId   String?   @map("reviewer_id") @db.Char(36)
+  reviewerNotes String?  @map("reviewer_notes") @db.VarChar(1000)
+  expiresAt    DateTime? @map("expires_at") @db.DateTime(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  reviewer User? @relation("VerificationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([subjectType, subjectId])
+  @@index([type, status])
+  @@index([status, createdAt])
+  @@map("verifications")
+}
+
+// --- Reports (Phase 1: EPIC-07) ---
+
+model Report {
+  id           String    @id @db.Char(36)
+  reporterId   String    @map("reporter_id") @db.Char(36)
+  subjectType  String    @map("subject_type") @db.VarChar(32)
+  subjectId    String    @map("subject_id") @db.Char(36)
+  reason       String    @db.VarChar(96)
+  detail       String?   @db.Text
+  status       String    @default("open") @db.VarChar(32)
+  moderatorId  String?   @map("moderator_id") @db.Char(36)
+  moderatorNotes String? @map("moderator_notes") @db.VarChar(1000)
+  resolvedAt   DateTime? @map("resolved_at") @db.DateTime(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  reporter   User @relation("ReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  moderator  User? @relation("ReportModerator", fields: [moderatorId], references: [id], onDelete: SetNull)
+  moderationActions ModerationAction[] @relation("ModerationActionReport")
+
+  @@index([subjectType, subjectId])
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+// --- Moderation Actions (Phase 1: EPIC-07) ---
+
+model ModerationAction {
+  id           String    @id @db.Char(36)
+  reportId     String?   @map("report_id") @db.Char(36)
+  moderatorId  String    @map("moderator_id") @db.Char(36)
+  action       String    @db.VarChar(96)
+  targetType   String    @map("target_type") @db.VarChar(32)
+  targetId     String    @map("target_id") @db.Char(36)
+  reason       String    @db.VarChar(255)
+  metadataJson Json?     @map("metadata_json")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+
+  report     Report? @relation("ModerationActionReport", fields: [reportId], references: [id], onDelete: SetNull)
+  moderator  User    @relation(fields: [moderatorId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@index([targetType, targetId])
+  @@index([moderatorId, createdAt])
+  @@map("moderation_actions")
+}
+
+// --- Messaging (Phase 2: EPIC-11) ---
+
+model Message {
+  id               String    @id @db.Char(36)
+  senderId         String    @map("sender_id") @db.Char(36)
+  recipientId      String    @map("recipient_id") @db.Char(36)
+  content          String    @db.Text
+  type             String    @default("text") @db.VarChar(32)
+  status           String    @default("sent") @db.VarChar(32)
+  metadataJson     Json?     @map("metadata_json")
+  read             Boolean   @default(false) @map("read")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  sender User @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, createdAt])
+  @@index([senderId, createdAt])
+  @@map("messages")
 }
 
 // --- Audit (M0-015, ADR-012) — append-only hash-chained ---
@@ -209,6 +349,7 @@ model AuditEvent {
 model MediaAsset {
   id               String    @id @db.Char(36)
   ownerId          String    @map("owner_id") @db.Char(36)
+  listingId        String?   @map("listing_id") @db.Char(36)
   cloudinaryPublicId String  @map("cloudinary_public_id") @db.VarChar(255)
   resourceType     String    @default("image") @map("resource_type") @db.VarChar(32)
   format           String?   @db.VarChar(32)
@@ -221,9 +362,11 @@ model MediaAsset {
   createdAt        DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
 
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  listing Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 
   @@index([ownerId])
+  @@index([listingId])
   @@unique([cloudinaryPublicId])
   @@map("media_assets")
 }
