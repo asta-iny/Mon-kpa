@@ -414,3 +414,75 @@ model SearchSpikeDocument {
   @@index([countyCode])
   @@map("search_spike_documents")
 }
+
+// --- Reputation & Reviews (Phase 2: EPIC-13) ---
+
+model Review {
+  id              String    @id @db.Char(36)
+  reviewerId      String    @map("reviewer_id") @db.Char(36)
+  subjectId       String    @map("subject_id") @db.Char(36)
+  subjectType     String    @map("subject_type") @db.VarChar(32) // 'user' | 'listing' | 'transaction'
+  rating          Int       @default(5) @db.Int(1)
+  title           String    @db.VarChar(200)
+  body            String    @db.Text
+  status          String    @default("pending") @db.VarChar(32) // 'pending' | 'approved' | 'rejected'
+  createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+
+  reviewer User @relation("ReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  subject   Subject @relation("ReviewSubject", fields: [subjectId], references: [id], onDelete: Restrict)
+
+  @@index([subjectType, subjectId])
+  @@index([status, createdAt])
+  @@map("reviews")
+}
+
+model Subject {
+  id        String   @id @db.Char(36)
+  userId    String?  @map("user_id") @db.Char(36)
+  listingId String?   @map("listing_id") @db.Char(36)
+  transactionId String? @map("transaction_id") @db.Char(36)
+
+  user   User? @relation("UserSubject", fields: [userId], references: [id], onDelete: SetNull)
+  listing Listing? @relation("ListingSubject", fields: [listingId], references: [id], onDelete: SetNull)
+  transaction Transaction? @relation("TransactionSubject", fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@map("subjects")
+}
+
+// Extend User with trust score
+model User {
+  id           String   @id @db.Char(36)
+  phoneE164    String   @unique @map("phone_e164") @db.VarChar(20)
+  displayName  String?  @map("display_name") @db.VarChar(120)
+  status       String   @default("active") @db.VarChar(32)
+  createdAt    DateTime @default(now()) @map("created_at") @db.DateTime(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.DateTime(3)
+  deletedAt    DateTime? @map("deleted_at") @db.DateTime(3)
+
+  roles              UserRole[]
+  sessions           Session[]
+  otpChallenges      OtpChallenge[]
+  mediaAssets        MediaAsset[]
+  auditEvents        AuditEvent[] @relation("AuditActor")
+  listings           Listing[]
+  verifications      Verification[] @relation("VerificationReviewer")
+  reports            Report[]       @relation("ReportReporter")
+  moderatedReports   Report[]       @relation("ReportModerator")
+  moderationActions  ModerationAction[]
+
+  // Reputation fields (Phase 2)
+  trustScore       Int      @default(0) @db.Int(3)
+  totalReviews     Int      @default(0) @db.Int(3)
+  positiveReviews  Int      @default(0) @db.Int(3)
+  averageRating    Decimal  @default(0) @db.Decimal(3, 2)
+  reviewCount      Int      @default(0) @db.Int(3)
+
+  messagesSent       Message[]      @relation("MessageSender")
+  messagesReceived   Message[]      @relation("MessageRecipient")
+  transactionsSent   Transaction[]  @relation("TransactionSeller")
+  transactionsReceived Transaction[] @relation("TransactionBuyer")
+  reviews            Review[]       @relation("ReviewReviewer")
+
+  @@map("users")
+}

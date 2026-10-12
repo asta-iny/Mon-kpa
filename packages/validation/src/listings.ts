@@ -90,3 +90,33 @@ export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 export type TransactionQuery = z.infer<typeof transactionQuerySchema>;
 export type TransactionStatus = z.infer<typeof transactionStatusSchema>;
+
+export const reviewStatusSchema = z.enum(['pending', 'approved', 'rejected']);
+
+export const createReviewSchema = z.object({
+  subjectId: publicIdSchema,
+  subjectType: z.enum(['user', 'listing', 'transaction']),
+  rating: z.number().int().min(1).max(5),
+  title: z.string().min(1).max(200),
+  body: z.string().min(1).max(1000),
+});
+
+export const updateReviewSchema = z.object({
+  rating: z.number().int().min(1).max(5).optional(),
+  title: z.string().min(1).max(200).optional(),
+  body: z.string().min(1).max(1000).optional(),
+  status: reviewStatusSchema.optional(),
+});
+
+export const reviewQuerySchema = cursorPaginationQuerySchema.extend({
+  subjectId: publicIdSchema.optional(),
+  subjectType: z.enum(['user', 'listing', 'transaction']).optional(),
+  status: reviewStatusSchema.optional(),
+  cursor: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type CreateReviewInput = z.infer<typeof createReviewSchema>;
+export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
+export type ReviewQuery = z.infer<typeof reviewQuerySchema>;
+export type ReviewStatus = z.infer<typeof reviewStatusSchema>;
