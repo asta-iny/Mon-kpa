@@ -428,6 +428,9 @@ model Review {
   status          String    @default("pending") @db.VarChar(32) // 'pending' | 'approved' | 'rejected'
   createdAt       DateTime  @default(now()) @map("created_at") @db.DateTime(3)
   updatedAt       DateTime  @updatedAt @map("updated_at") @db.DateTime(3)
+  parentId        String?   @map("parent_id") @db.Char(36)
+  helpfulCount    Int       @default(0) @db.Int(3)
+  unhelpfulCount  Int       @default(0) @db.Int(3)
 
   reviewer User @relation("ReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
   subject   Subject @relation("ReviewSubject", fields: [subjectId], references: [id], onDelete: Restrict)
