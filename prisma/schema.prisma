@@ -43,6 +43,8 @@ model User {
 
   messagesSent       Message[]      @relation("MessageSender")
   messagesReceived   Message[]      @relation("MessageRecipient")
+  transactionsSent   Transaction[]  @relation("TransactionSeller")
+  transactionsReceived Transaction[] @relation("TransactionBuyer")
 
   @@map("users")
 }
@@ -221,6 +223,7 @@ model Listing {
   district  District? @relation(fields: [districtId], references: [id], onDelete: Restrict)
   community Community? @relation(fields: [communityId], references: [id], onDelete: Restrict)
   media     MediaAsset[]
+  transactions Transaction[] @relation("TransactionListing")
 
   @@index([ownerId])
   @@index([categoryId])
@@ -228,6 +231,34 @@ model Listing {
   @@index([status, createdAt])
   @@index([availableFrom, availableUntil])
   @@map("listings")
+}
+
+// --- Transactions (Phase 3: EPIC-12) ---
+// Lifecycle: pending → confirmed → completed → cancelled/refunded
+
+model Transaction {
+  id                String    @id @db.Char(36)
+  buyerId           String    @map("buyer_id") @db.Char(36)
+  sellerId          String    @map("seller_id") @db.Char(36)
+  listingId         String    @map("listing_id") @db.Char(36)
+  amount              String    @map("amount") @db.VarChar(32)
+  currency          String    @map("currency") @db.VarChar(3)
+  status            String    @default("pending") @db.VarChar(32)
+  paymentMethod     String?   @map("payment_method") @db.VarChar(64)
+  transactionDate   DateTime  @map("transaction_date") @db.DateTime(3)
+  completedAt       DateTime? @map("completed_at") @db.DateTime(3)
+  cancelledAt       DateTime? @map("cancelled_at") @db.DateTime(3)
+  refundedAt        DateTime? @map("refunded_at") @db.DateTime(3)
+  metadataJson      Json?     @map("metadata_json")
+
+  buyer User @relation("TransactionBuyer", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller User @relation("TransactionSeller", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing Listing @relation("TransactionListing", fields: [listingId], references: [id], onDelete: Restrict)
+
+  @@index([buyerId, status])
+  @@index([sellerId, status])
+  @@index([listingId, status])
+  @@map("transactions")
 }
 
 // --- Verification (Phase 1: EPIC-07) ---
