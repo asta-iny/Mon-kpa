@@ -1,3 +1,4 @@
+import { createSpikeRouter } from './modules/spike/ssr-search.js';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -11,7 +12,11 @@ import { createAuthRouter } from './modules/auth/auth.controller.js';
 import { createLocationsRouter } from './modules/locations/locations.controller.js';
 import { createCategoriesRouter } from './modules/categories/categories.controller.js';
 import { createMediaRouter } from './modules/media/media.controller.js';
-import { createSpikeRouter } from './modules/spike/ssr-search.js';
+import { createReputationRouter } from './modules/reputation/reputation.controller.js';
+import { createListingsRouter } from './modules/listings/listings.controller.js';
+import { createSearchRouter } from './modules/search/search.controller.js';
+import { createTrustRouter } from './modules/trust/trust.controller.js';
+import { requireAuth } from './middleware/auth.js';
 
 export function createApp() {
   const env = getEnv();
@@ -49,8 +54,43 @@ export function createApp() {
   app.use('/api/v1', createMediaRouter());
   app.use('/api/v1', createSpikeRouter());
 
+  // Listings: public read, protected write
+  const listingsRouter = createListingsRouter();
+  app.use(
+    '/api/v1/listings',
+    (req, res, next) => {
+      const publicPaths = ['/'];
+      const publicMethods = ['GET'];
+      const isPublic = publicPaths.includes(req.path) && publicMethods.includes(req.method);
+      if (isPublic) return next();
+      requireAuth(req, res, next);
+    },
+    listingsRouter,
+  );
+  app.use('/api/v1/listings/mine', requireAuth, listingsRouter);
+  app.use(
+    '/api/v1/listings/:id',
+    (req, res, next) => {
+      if (req.method === 'GET') return next();
+      requireAuth(req, res, next);
+    },
+    listingsRouter,
+  );
+
+  const searchRouter = createSearchRouter();
+  app.use('/api/v1/search', searchRouter);
+  app.use('/api/v1/reputation', createReputationRouter());
+  app.use('/api/v1/search/facets', searchRouter);
+
+  // Trust/Safety: protected endpoints
+  const trustRouter = createTrustRouter();
+  app.use('/api/v1/verifications', requireAuth, trustRouter);
+  app.use('/api/v1/reports', requireAuth, trustRouter);
+  app.use('/api/v1/moderation-actions', requireAuth, trustRouter);
+
   app.use(notFoundHandler);
   app.use(createErrorHandler(logger));
 
   return { app, logger, env };
 }
+
