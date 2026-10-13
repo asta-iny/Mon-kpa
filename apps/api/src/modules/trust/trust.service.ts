@@ -1,3 +1,4 @@
+import { TrustRepository } from './trust.repository.js';
 import type { PrismaClient } from '@prisma/client';
 import type {
   CreateVerificationInput,
