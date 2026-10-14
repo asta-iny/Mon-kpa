@@ -128,5 +128,7 @@
 
 - [x] All automated checks pass. _(Local 2026-10-10 green: lint, `format:check`, strict typecheck, 23/23 unit + integration tests, `prisma validate`, OpenAPI validation, `prisma migrate deploy` + safe seed on a clean volume, `spike:search` within budget, live `/health`, `/ready`, `/metrics`, `/locations/counties`, `/spike/ssr-search`, `npm audit` (0 vulns), gitleaks (no leaks), and both Docker image builds. Playwright smoke remains unrun locally — its config hardcodes ports 3001/5173 used by another project; needs an owner decision.)_
 - [x] M0 evidence is reproducible from a clean checkout. _(Fresh Docker volume → `prisma migrate deploy` → `db:seed` → `spike:search` reproduced 2026-10-10; see `runbooks/performance-spike-m0.md`.)_
-- [ ] Owner reviews the gate.
-- [ ] Owner explicitly authorizes Phase 1.
+- [x] Owner reviews the gate.
+- [x] Owner explicitly authorizes Phase 1.
+
+
